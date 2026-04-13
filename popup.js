@@ -3,6 +3,9 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+// ----- 버전 표시 -----
+$('#app-version').textContent = `v${chrome.runtime.getManifest().version}`;
+
 // ----- 날짜 관련 -----
 function getLocalDateStr(date) {
   // YYYY-MM-DD (로컬 타임존 기준)

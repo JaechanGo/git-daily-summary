@@ -251,6 +251,50 @@
       cursor: pointer;
     }
     .btn-select-action:hover { color: #c9d1d9; border-color: #484f58; }
+
+    /* 릴리즈 노트 */
+    .release-body {
+      font-size: 13px;
+      color: #c9d1d9;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 14px;
+      line-height: 1.6;
+    }
+    .release-body h2 {
+      font-size: 15px;
+      color: #58a6ff;
+      margin: 14px 0 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #21262d;
+    }
+    .release-body h2:first-child { margin-top: 0; }
+    .release-body h3 {
+      font-size: 14px;
+      color: #f0f6fc;
+      margin: 10px 0 6px;
+    }
+    .release-body ul {
+      padding-left: 20px;
+      margin: 4px 0 8px;
+    }
+    .release-body li {
+      margin-bottom: 3px;
+      color: #b1bac4;
+    }
+    .release-body code {
+      background: #21262d;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #f0f6fc;
+    }
+    .release-body strong { color: #f0f6fc; }
+    .release-body p { margin: 6px 0; }
+
     .repo-count {
       font-size: 11px;
       color: #8b949e;
@@ -405,6 +449,23 @@
       </div>
     </div>
     <div id="auto-extract-status" style="margin-top: 10px; font-size: 12px; color: #8b949e;"></div>
+  </div>
+
+  <!-- 버전 정보 -->
+  <div class="section">
+    <h2>버전 정보</h2>
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+      <span style="font-size:14px; color:#f0f6fc;">현재 버전: <strong id="current-version"></strong></span>
+      <span id="version-status" style="font-size:12px;"></span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn-test" id="btn-check-update" style="margin-left:0;">최신 버전 확인</button>
+      <a id="btn-download" href="#" target="_blank" style="display:none; padding:10px 24px; background:#238636; color:#fff; border:none; border-radius:6px; font-size:14px; font-weight:600; text-decoration:none; text-align:center;">다운로드</a>
+    </div>
+    <div id="release-info" style="margin-top:12px; display:none;">
+      <div style="font-size:13px; color:#f0f6fc; margin-bottom:6px;" id="release-name"></div>
+      <div class="release-body" id="release-body"></div>
+    </div>
   </div>
 
   <div class="actions">

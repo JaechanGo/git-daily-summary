@@ -384,5 +384,104 @@ function escapeAttr(str) {
   return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// ----- 버전 정보 -----
+$('#current-version').textContent = `v${chrome.runtime.getManifest().version}`;
+
+// 저장된 업데이트 정보가 있으면 바로 표시
+chrome.runtime.sendMessage({ action: 'getUpdateInfo' }, (response) => {
+  if (response?.success && response.data) {
+    displayUpdateInfo(response.data);
+  }
+});
+
+$('#btn-check-update').addEventListener('click', async () => {
+  const btn = $('#btn-check-update');
+  btn.disabled = true;
+  btn.textContent = '확인 중...';
+  $('#version-status').textContent = '';
+  $('#btn-download').style.display = 'none';
+  $('#release-info').style.display = 'none';
+
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'checkUpdate' });
+    if (response?.success && response.data) {
+      displayUpdateInfo(response.data);
+    } else if (response?.success && !response.data) {
+      $('#version-status').textContent = '릴리즈 정보를 찾을 수 없습니다.';
+      $('#version-status').style.color = '#f85149';
+    } else {
+      $('#version-status').textContent = `확인 실패: ${response?.error || '알 수 없는 오류'}`;
+      $('#version-status').style.color = '#f85149';
+    }
+  } catch (e) {
+    $('#version-status').textContent = `오류: ${e.message}`;
+    $('#version-status').style.color = '#f85149';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '최신 버전 확인';
+  }
+});
+
+function displayUpdateInfo(info) {
+  const statusEl = $('#version-status');
+  const downloadBtn = $('#btn-download');
+  const releaseInfo = $('#release-info');
+
+  if (info.hasUpdate) {
+    statusEl.innerHTML = `→ <strong style="color:#f85149;">v${info.latestVersion}</strong> 업데이트 가능`;
+    statusEl.style.color = '#f85149';
+    downloadBtn.href = info.downloadUrl || info.releaseUrl;
+    downloadBtn.textContent = `v${info.latestVersion} 다운로드`;
+    downloadBtn.style.display = 'inline-block';
+  } else {
+    statusEl.textContent = '✅ 최신 버전입니다.';
+    statusEl.style.color = '#3fb950';
+    downloadBtn.style.display = 'none';
+  }
+
+  // 릴리즈 노트 표시
+  if (info.releaseName || info.releaseBody) {
+    $('#release-name').textContent = info.releaseName || '';
+    $('#release-body').innerHTML = markdownToHtml(info.releaseBody || '(릴리즈 노트 없음)');
+    releaseInfo.style.display = 'block';
+  }
+}
+
+/**
+ * 간단한 마크다운 → HTML 변환 (GitHub Release 노트용)
+ */
+function markdownToHtml(md) {
+  let html = escapeHtml(md);
+
+  // ## 헤더 → h2
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  // ### 헤더 → h3
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+
+  // **bold**
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // `code`
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // 리스트: "- 항목" → li 태그 (연속된 줄을 ul로 감싸기)
+  html = html.replace(/((?:^- .+\n?)+)/gm, (block) => {
+    const items = block.trim().split('\n').map((line) => {
+      return '<li>' + line.replace(/^- /, '') + '</li>';
+    }).join('');
+    return '<ul>' + items + '</ul>';
+  });
+
+  // 빈 줄을 기준으로 나머지 텍스트를 p 태그로 감싸기
+  html = html.split('\n').map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<li') || trimmed.startsWith('</')) return line;
+    return '<p>' + trimmed + '</p>';
+  }).join('\n');
+
+  return html;
+}
+
 // Init
 loadSettings();

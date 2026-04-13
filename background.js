@@ -38,7 +38,8 @@ async function checkForUpdate() {
       latestVersion,
       hasUpdate: isNewerVersion(latestVersion, currentVersion),
       releaseUrl: release.html_url,
-      downloadUrl: release.assets?.[0]?.browser_download_url || release.zipball_url,
+      downloadUrl: release.assets?.[0]?.browser_download_url
+        || `https://github.com/${UPDATE_REPO_OWNER}/${UPDATE_REPO_NAME}/archive/refs/tags/${release.tag_name}.zip`,
       releaseName: release.name || `v${latestVersion}`,
       releaseBody: release.body || '',
       publishedAt: release.published_at,
@@ -97,9 +98,17 @@ async function loadSettings() {
 function createGitProviders(settings) {
   const providers = [];
 
+  // 설정에 있는 모든 git 이메일 수집 (GitHub 매칭에도 사용)
+  const extraEmails = [];
+  if (settings.gitea && Array.isArray(settings.gitea)) {
+    for (const inst of settings.gitea) {
+      if (inst.email) extraEmails.push(inst.email);
+    }
+  }
+
   // GitHub
   if (settings.github?.token && settings.github?.username) {
-    providers.push(new GitHubProvider(settings.github.token, settings.github.username));
+    providers.push(new GitHubProvider(settings.github.token, settings.github.username, extraEmails));
   }
 
   // Gitea (다중 인스턴스)
@@ -262,15 +271,18 @@ async function extractAndSummarize(targetDate) {
   const aiProvider = createAIProvider(settings.ai);
   const prompt = buildSummaryPrompt(settings.ai);
 
-  // 날짜 범위 계산
+  // 날짜 범위 계산 (로컬 타임존 기준으로 UTC 변환)
   const dateStr = targetDate || new Date().toISOString().split('T')[0];
-  const since = `${dateStr}T00:00:00Z`;
-  const until = `${dateStr}T23:59:59Z`;
+  const localStart = new Date(`${dateStr}T00:00:00`); // 로컬 자정
+  const localEnd = new Date(`${dateStr}T23:59:59`);   // 로컬 23:59:59
+  const since = localStart.toISOString(); // UTC로 변환 (KST 00:00 → UTC 전날 15:00)
+  const until = localEnd.toISOString();   // UTC로 변환 (KST 23:59 → UTC 14:59)
+  console.log(`[Extract] 날짜: ${dateStr}, since(UTC): ${since}, until(UTC): ${until}`);
 
   // 1) 모든 provider에서 해당 날짜 커밋 수집 (병렬)
   const providerResults = await Promise.allSettled(
     gitProviders.map((provider) =>
-      provider.getCommitsByDate(since, until, selectedRepos)
+      provider.getCommitsByDate(since, until, selectedRepos, dateStr)
         .then((repos) => repos.map((repo) => ({ ...repo, _provider: provider })))
     )
   );
