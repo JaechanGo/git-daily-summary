@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Git Daily Summary - 설정</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      padding: 40px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      color: #58a6ff;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #8b949e;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .section {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      font-size: 16px;
+      color: #f0f6fc;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section h2 .badge {
+      font-size: 11px;
+      background: #238636;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: #8b949e;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+    label:first-of-type { margin-top: 0; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #58a6ff;
+    }
+    input::placeholder { color: #484f58; }
+    .hint {
+      font-size: 12px;
+      color: #484f58;
+      margin-top: 4px;
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+    .row > div { flex: 1; }
+    .ai-provider-extra { display: none; margin-top: 14px; }
+    .ai-provider-extra.active { display: block; }
+    .btn-save {
+      display: inline-block;
+      padding: 10px 24px;
+      background: #238636;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-save:hover { background: #2ea043; }
+    .btn-test {
+      display: inline-block;
+      padding: 10px 24px;
+      background: #30363d;
+      color: #c9d1d9;
+      border: 1px solid #484f58;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.2s;
+    }
+    .btn-test:hover { background: #484f58; }
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status {
+      margin-left: 12px;
+      font-size: 13px;
+    }
+    .status.success { color: #3fb950; }
+    .status.error { color: #f85149; }
+
+    /* Gitea 인스턴스 목록 */
+    .gitea-instance {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 14px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .btn-remove-instance {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #f85149;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    .btn-add-instance {
+      display: inline-block;
+      padding: 6px 14px;
+      background: #21262d;
+      color: #58a6ff;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-add-instance:hover { background: #30363d; }
+
+    /* Repo selector */
+    .repo-selector {
+      margin-top: 16px;
+      border-top: 1px solid #30363d;
+      padding-top: 16px;
+    }
+    .repo-selector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .repo-selector-header h3 {
+      font-size: 14px;
+      color: #f0f6fc;
+    }
+    .btn-fetch-repos {
+      padding: 5px 12px;
+      background: #21262d;
+      color: #58a6ff;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-fetch-repos:hover { background: #30363d; }
+    .btn-fetch-repos:disabled { opacity: 0.5; cursor: not-allowed; }
+    .repo-search {
+      width: 100%;
+      padding: 7px 10px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #c9d1d9;
+      font-size: 13px;
+      margin-bottom: 8px;
+      outline: none;
+    }
+    .repo-search:focus { border-color: #58a6ff; }
+    .repo-search::placeholder { color: #484f58; }
+    .repo-list {
+      max-height: 260px;
+      overflow-y: auto;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #0d1117;
+    }
+    .repo-list:empty::after {
+      content: '레포 목록을 불러오려면 "레포 불러오기" 버튼을 클릭하세요';
+      display: block;
+      padding: 20px;
+      text-align: center;
+      color: #484f58;
+      font-size: 12px;
+    }
+    .repo-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #21262d;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .repo-item:last-child { border-bottom: none; }
+    .repo-item:hover { background: #161b22; }
+    .repo-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #238636;
+      cursor: pointer;
+    }
+    .repo-item .repo-name {
+      flex: 1;
+      color: #c9d1d9;
+    }
+    .repo-item .repo-source {
+      font-size: 10px;
+      color: #8b949e;
+      background: #21262d;
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+    .repo-select-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-select-action {
+      padding: 4px 10px;
+      background: none;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      color: #8b949e;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-select-action:hover { color: #c9d1d9; border-color: #484f58; }
+    .repo-count {
+      font-size: 11px;
+      color: #8b949e;
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Git Daily Summary</h1>
+  <p class="subtitle">GitHub / Gitea 커밋을 AI로 자동 요약하는 확장프로그램 설정</p>
+
+  <!-- GitHub -->
+  <div class="section">
+    <h2>GitHub <span class="badge">Personal Access Token</span></h2>
+    <label for="github-token">GitHub Token</label>
+    <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+    <div class="hint">Settings → Developer settings → Personal access tokens → repo 권한 필요</div>
+    <label for="github-username">GitHub Username</label>
+    <input type="text" id="github-username" placeholder="your-username">
+  </div>
+
+  <!-- Gitea -->
+  <div class="section">
+    <h2>Gitea <span class="badge">다중 인스턴스 지원</span></h2>
+    <div id="gitea-instances"></div>
+    <button class="btn-add-instance" id="btn-add-gitea">+ Gitea 인스턴스 추가</button>
+  </div>
+
+  <!-- 프로젝트(레포) 선택 -->
+  <div class="section">
+    <h2>프로젝트 선택 <span class="badge">검색 대상 레포</span></h2>
+    <div class="hint" style="margin-bottom: 12px;">위에서 토큰을 먼저 저장한 뒤, 레포를 불러와 검색할 프로젝트를 선택하세요. 선택하지 않으면 전체 레포를 검색합니다.</div>
+    <div class="repo-selector">
+      <div class="repo-selector-header">
+        <h3>레포 목록</h3>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="repo-count" id="repo-count"></span>
+          <button class="btn-fetch-repos" id="btn-fetch-repos">레포 불러오기</button>
+        </div>
+      </div>
+      <input type="text" class="repo-search" id="repo-search" placeholder="레포 이름 검색...">
+      <div class="repo-list" id="repo-list"></div>
+      <div class="repo-select-actions">
+        <button class="btn-select-action" id="btn-select-all">전체 선택</button>
+        <button class="btn-select-action" id="btn-deselect-all">전체 해제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Provider -->
+  <div class="section">
+    <h2>AI Provider</h2>
+    <label for="ai-provider">사용할 AI 모델 선택</label>
+    <select id="ai-provider">
+      <option value="gemini">Google Gemini</option>
+      <option value="vllm">Local vLLM (OpenAI-compatible)</option>
+      <option value="openai">OpenAI</option>
+      <option value="anthropic">Anthropic Claude</option>
+      <option value="ollama">Ollama (Local)</option>
+      <option value="custom">Custom OpenAI-compatible API</option>
+    </select>
+
+    <!-- Gemini -->
+    <div id="config-gemini" class="ai-provider-extra active">
+      <label for="gemini-api-key">Gemini API Key</label>
+      <input type="password" id="gemini-api-key" placeholder="AIzaSy...">
+      <label for="gemini-model">Model</label>
+      <input type="text" id="gemini-model" placeholder="gemini-2.0-flash" value="gemini-2.0-flash">
+    </div>
+
+    <!-- vLLM -->
+    <div id="config-vllm" class="ai-provider-extra">
+      <label for="vllm-endpoint">vLLM Endpoint</label>
+      <input type="text" id="vllm-endpoint" placeholder="http://localhost:8000/v1" value="http://localhost:8000/v1">
+      <label for="vllm-model">Model Name</label>
+      <input type="text" id="vllm-model" placeholder="my-model">
+      <label for="vllm-api-key">API Key (선택)</label>
+      <input type="password" id="vllm-api-key" placeholder="비워두면 인증 없이 요청">
+    </div>
+
+    <!-- OpenAI -->
+    <div id="config-openai" class="ai-provider-extra">
+      <label for="openai-api-key">OpenAI API Key</label>
+      <input type="password" id="openai-api-key" placeholder="sk-...">
+      <label for="openai-model">Model</label>
+      <input type="text" id="openai-model" placeholder="gpt-4o-mini" value="gpt-4o-mini">
+    </div>
+
+    <!-- Anthropic -->
+    <div id="config-anthropic" class="ai-provider-extra">
+      <label for="anthropic-api-key">Anthropic API Key</label>
+      <input type="password" id="anthropic-api-key" placeholder="sk-ant-...">
+      <label for="anthropic-model">Model</label>
+      <input type="text" id="anthropic-model" placeholder="claude-sonnet-4-20250514" value="claude-sonnet-4-20250514">
+    </div>
+
+    <!-- Ollama -->
+    <div id="config-ollama" class="ai-provider-extra">
+      <label for="ollama-endpoint">Ollama Endpoint</label>
+      <input type="text" id="ollama-endpoint" placeholder="http://localhost:11434" value="http://localhost:11434">
+      <label for="ollama-model">Model</label>
+      <input type="text" id="ollama-model" placeholder="llama3" value="llama3">
+    </div>
+
+    <!-- Custom -->
+    <div id="config-custom" class="ai-provider-extra">
+      <label for="custom-endpoint">API Endpoint</label>
+      <input type="text" id="custom-endpoint" placeholder="https://your-api.com/v1">
+      <label for="custom-model">Model Name</label>
+      <input type="text" id="custom-model" placeholder="model-name">
+      <label for="custom-api-key">API Key</label>
+      <input type="password" id="custom-api-key" placeholder="your-api-key">
+    </div>
+
+    <label for="ai-language">요약 언어</label>
+    <select id="ai-language">
+      <option value="ko">한국어</option>
+      <option value="en">English</option>
+      <option value="ja">日本語</option>
+    </select>
+  </div>
+
+  <!-- AI 프롬프트 커스텀 -->
+  <div class="section">
+    <h2>AI 프롬프트 커스텀 <span class="badge">요약 스타일 설정</span></h2>
+    <div class="hint" style="margin-bottom: 12px;">AI에게 전달할 시스템 프롬프트를 직접 수정할 수 있습니다. 비워두면 기본 프롬프트를 사용합니다.</div>
+    <label for="custom-prompt">시스템 프롬프트</label>
+    <textarea id="custom-prompt" rows="12" placeholder="비워두면 기본 프롬프트 사용&#10;&#10;예: 당신은 개발자의 일일 Git 커밋을 요약하는 어시스턴트입니다..."></textarea>
+    <div style="margin-top: 8px;">
+      <button class="btn-select-action" id="btn-reset-prompt" style="color:#f85149;">기본 프롬프트로 초기화</button>
+      <button class="btn-select-action" id="btn-preview-prompt">현재 기본 프롬프트 보기</button>
+    </div>
+  </div>
+
+  <!-- 자동 추출 스케줄 -->
+  <div class="section">
+    <h2>자동 추출 스케줄 <span class="badge">매일 자동 실행</span></h2>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+      <label style="margin: 0; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <input type="checkbox" id="auto-extract-enabled" style="width:18px; height:18px; accent-color:#238636; cursor:pointer;">
+        <span style="color:#f0f6fc; font-size:14px;">자동 추출 활성화</span>
+      </label>
+    </div>
+    <div class="row">
+      <div>
+        <label for="auto-extract-time">추출 시간</label>
+        <input type="time" id="auto-extract-time" value="17:55">
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <div class="hint" style="margin-top: 10px;">매일 설정한 시간에 오늘의 커밋을 자동으로 추출/저장합니다.</div>
+      </div>
+    </div>
+    <div id="auto-extract-status" style="margin-top: 10px; font-size: 12px; color: #8b949e;"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-save" id="btn-save">저장</button>
+    <button class="btn-test" id="btn-test-ai">AI 연결 테스트</button>
+    <span class="status" id="status-msg"></span>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

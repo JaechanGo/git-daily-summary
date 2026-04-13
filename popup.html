@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 480px;
+      min-height: 200px;
+      max-height: 600px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      overflow-y: auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid #21262d;
+      position: sticky;
+      top: 0;
+      background: #0d1117;
+      z-index: 10;
+    }
+    .header h1 {
+      font-size: 15px;
+      color: #f0f6fc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header .date {
+      font-size: 12px;
+      color: #8b949e;
+      font-weight: 400;
+    }
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #c9d1d9;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { background: #30363d; }
+    .btn-primary {
+      background: #238636;
+      border-color: #238636;
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn-primary:hover { background: #2ea043; }
+    .btn-primary:disabled {
+      background: #1a5c2a;
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .btn-icon {
+      padding: 6px 8px;
+      font-size: 15px;
+    }
+
+    /* Content */
+    .content { padding: 14px 18px 18px; }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #8b949e;
+    }
+    .empty .icon { font-size: 36px; margin-bottom: 12px; }
+    .empty p { font-size: 13px; line-height: 1.5; }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: #8b949e; font-size: 13px; }
+
+    /* Project card */
+    .project {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .project.error { border-color: #f8514966; }
+    .project-header {
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .project-header:hover { background: #1c2129; }
+    .project-header .toggle-icon {
+      color: #484f58;
+      font-size: 12px;
+      transition: transform 0.2s;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .project.collapsed .toggle-icon { transform: rotate(-90deg); }
+    .project-info { flex: 1; }
+    .project-provider {
+      font-size: 11px;
+      color: #8b949e;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .provider-badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .provider-badge.github { background: #1f6feb33; color: #58a6ff; }
+    .provider-badge.gitea { background: #23863633; color: #3fb950; }
+    .project-title {
+      font-size: 14px;
+      color: #f0f6fc;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .commit-count {
+      font-size: 11px;
+      color: #8b949e;
+      background: #21262d;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .project-body {
+      padding: 0 14px 14px;
+      font-size: 13px;
+      color: #b1bac4;
+      line-height: 1.7;
+      border-top: 1px solid #21262d;
+      padding-top: 12px;
+    }
+    .project.collapsed .project-body,
+    .project.collapsed .project-actions {
+      display: none;
+    }
+    /* 카테고리 스타일 */
+    .category-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #58a6ff;
+      background: #1f6feb22;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+    .project-body .category-label:first-child {
+      margin-top: 0;
+    }
+    .summary-item {
+      padding-left: 12px;
+      position: relative;
+      color: #c9d1d9;
+      line-height: 1.6;
+    }
+    .summary-item::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #484f58;
+    }
+
+    /* Action buttons */
+    .project-actions {
+      padding: 0 14px 10px;
+      display: flex;
+      gap: 6px;
+    }
+    .btn-copy, .btn-paste {
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+    .btn-copy.copied, .btn-paste.pasted {
+      border-color: #3fb950;
+      color: #3fb950;
+    }
+    .btn-paste {
+      background: #1f6feb22;
+      border-color: #1f6feb66;
+      color: #58a6ff;
+    }
+    .btn-paste:hover {
+      background: #1f6feb44;
+    }
+    .btn-create {
+      background: #23863622;
+      border-color: #23863666;
+      color: #3fb950;
+      font-size: 12px;
+      padding: 4px 10px;
+    }
+    .btn-create:hover {
+      background: #23863644;
+    }
+    .btn-create.created {
+      border-color: #3fb950;
+      color: #3fb950;
+    }
+
+    /* 업데이트 알림 바 */
+    .update-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #1f6feb22, #f8514922);
+      border-bottom: 1px solid #f8514966;
+    }
+    .update-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #f0f6fc;
+    }
+    .update-version {
+      font-size: 11px;
+      color: #8b949e;
+    }
+    .update-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-update {
+      padding: 4px 12px;
+      background: #f85149;
+      border: 1px solid #f85149;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-update:hover { background: #da3633; }
+    .btn-dismiss-update {
+      padding: 4px 8px;
+      background: transparent;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #8b949e;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn-dismiss-update:hover { color: #f0f6fc; }
+
+    /* Error */
+    .error-msg {
+      background: #f8514922;
+      border: 1px solid #f8514966;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #f85149;
+      margin: 10px 0;
+    }
+
+    /* Date picker bar */
+    .date-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+    }
+    .date-bar label {
+      font-size: 12px;
+      color: #8b949e;
+      white-space: nowrap;
+    }
+    .date-bar input[type="date"] {
+      flex: 1;
+      padding: 5px 8px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #c9d1d9;
+      font-size: 13px;
+      outline: none;
+    }
+    .date-bar input[type="date"]:focus {
+      border-color: #58a6ff;
+    }
+    .date-bar input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.7);
+      cursor: pointer;
+    }
+    .btn-today {
+      padding: 4px 10px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #58a6ff;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-today:hover { background: #30363d; }
+    .btn-nav {
+      padding: 4px 8px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 5px;
+      color: #c9d1d9;
+      font-size: 14px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .btn-nav:hover { background: #30363d; color: #f0f6fc; }
+    .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>
+      Git Daily Summary
+      <span class="date" id="today-date"></span>
+    </h1>
+    <div class="header-actions">
+      <button class="btn btn-icon" id="btn-settings" title="설정">⚙</button>
+      <button class="btn btn-primary" id="btn-extract">추출하기</button>
+    </div>
+  </div>
+
+  <div class="update-bar" id="update-bar" style="display:none;">
+    <div class="update-info">
+      <span>🔄</span>
+      <span id="update-text">새 버전이 있습니다</span>
+    </div>
+    <div class="update-actions">
+      <button class="btn-update" id="btn-update">업데이트</button>
+      <button class="btn-dismiss-update" id="btn-dismiss-update">✕</button>
+    </div>
+  </div>
+
+  <div class="date-bar">
+    <button class="btn-nav" id="btn-prev" title="이전 날">◀</button>
+    <label for="target-date">날짜:</label>
+    <input type="date" id="target-date">
+    <button class="btn-nav" id="btn-next" title="다음 날">▶</button>
+    <button class="btn-today" id="btn-today">오늘</button>
+  </div>
+
+  <div class="content" id="content">
+    <div class="empty" id="empty-state">
+      <div class="icon">📋</div>
+      <p><strong>추출하기</strong> 버튼을 눌러<br>오늘의 커밋을 AI로 요약하세요</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
